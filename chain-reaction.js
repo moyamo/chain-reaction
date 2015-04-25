@@ -28,7 +28,23 @@ function loadGame(canvasId) {
 	for (var i = 0; i < CReact.rows; ++i) {
 		CReact.gameBoard.push([]);
 		for (var j = 0; j < CReact.columns; ++j) {
-			CReact.gameBoard[i].push(makeCell(0, 0));
+			var threshold;
+			var r = (CReact.rows - 1).toString();
+			var c = (CReact.columns - 1).toString();
+			var is = i.toString();
+			var js = j.toString();
+
+			if (["0,0", "0," + c, r + ",0", r+","+c].indexOf(is+","+js) != -1) {
+				// corner
+				threshold = 2;
+			} else if (i == 0 || j == 0 || i == r || j == c) {
+				// edge
+				threshold = 3;
+			} else {
+				threshold = 4;
+			}
+			CReact.gameBoard[i].push(makeCell(0, 0, threshold));
+
 		}
 	}
 	drawBoard(CReact.gameBoard, CReact.canvas, CReact.rows, CReact.columns);
@@ -42,7 +58,7 @@ function loadGame(canvasId) {
 			x: e.clientX - CReact.canvas.offsetLeft,
 			y: e.clientY - CReact.canvas.offsetTop
 		};
-		cell = getCell(mouseCoord, width);
+		var cell = getCell(mouseCoord, width);
 		if (cell.row < CReact.rows && cell.col < CReact.columns) {
 			onCellClick(cell);
 		}
@@ -141,10 +157,12 @@ function drawBoard(gameBoard, canvas, rows, columns) {
  * Arguments:
  *   numAtoms - number of atoms in the cell
  *   player - the player who owns the atoms (zero if unowned)
+ *   threshold - maximum number of atoms a cell can hold (will explode)
  */
-function makeCell(numAtoms, player) {
+function makeCell(numAtoms, player, threshold) {
 	return {
 		numAtoms : numAtoms,
 		player : player,
+		threshold: threshold
 	};
 }
