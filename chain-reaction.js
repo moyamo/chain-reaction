@@ -269,7 +269,7 @@ function drawBoard(gameBoard, canvas, rows, columns) {
 	var width = computeCellWidth(canvas, rows, columns);
 	var ctx = canvas.getContext("2d");
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.strokeStyle = "#440000";
+	ctx.strokeStyle = CReact.playerColors[CReact.turn];
 	ctx.beginPath();
 	for (var i = 0; i < rows + 1; ++i) {
 		ctx.moveTo(0, i * width);
