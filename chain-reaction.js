@@ -10,6 +10,10 @@ var CReact = {
 	players: 2,
 	// Represents the gameboard.
 	gameBoard: undefined,
+	// Number of the player whose turn it is.
+	turn: 1,
+	// playerColors[i] is the color of the ith player
+	playerColors : ['#000000', '#FF0000', '#00FF00']
 };
 
 /**
@@ -40,7 +44,7 @@ function loadGame(canvasId) {
 		};
 		cell = getCell(mouseCoord, width);
 		if (cell.row < CReact.rows && cell.col < CReact.columns) {
-			onCellClick(cell.row, cell.col);
+			onCellClick(cell);
 		}
 	});
 }
@@ -49,10 +53,20 @@ function loadGame(canvasId) {
  * Called when cell is clicked.
  *
  * Arguments
- *   row - row number of cell clicked
- *   column - column number of cell clicked
+ *   cellcoord - Coordinates of cell clicked
  */
-function onCellClick(row, column) {
+function onCellClick(cellcoord) {
+	var board = CReact.gameBoard;
+	var cell = board[cellcoord.row][cellcoord.col];
+	var turn = CReact.turn;
+	// If cell is already claimed, no-op;
+	if (cell.player != 0 && cell.player != turn) return;
+	cell.numAtoms += 1;
+	cell.player = turn;
+	CReact.turn = turn % CReact.players + 1;
+	window.requestAnimationFrame(function () {
+		drawBoard(CReact.gameBoard, CReact.canvas, CReact.rows, CReact.columns);
+	});
 }
 
 /**
@@ -98,6 +112,7 @@ function computeCellWidth(canvas, rows, columns) {
 function drawBoard(gameBoard, canvas, rows, columns) {
 	var width = computeCellWidth(canvas, rows, columns);
 	var ctx = canvas.getContext("2d");
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	ctx.strokeStyle = "#440000";
 	ctx.beginPath();
 	for (var i = 0; i < rows + 1; ++i) {
@@ -113,6 +128,7 @@ function drawBoard(gameBoard, canvas, rows, columns) {
 	for (var i = 0; i < rows; ++i) {
 		for (var j = 0; j < columns; ++j) {
 			var text = gameBoard[i][j].numAtoms.toString();
+			ctx.fillStyle = CReact.playerColors[gameBoard[i][j].player];
 			ctx.fillText(text, j * width + fontSize / 2, i * width + fontSize);
 		}
 	}
