@@ -20,13 +20,32 @@ var CReact = {
  */
 function loadGame(canvasId) {
 	CReact.canvas = document.getElementById(canvasId);
-	gameBoard = [];
+	CReact.gameBoard = [];
 	for (var i = 0; i < CReact.rows; ++i) {
-		gameBoard.push([]);
+		CReact.gameBoard.push([]);
 		for (var j = 0; j < CReact.columns; ++j) {
-			gameBoard[i].push(makeCell(0, 0));
+			CReact.gameBoard[i].push(makeCell(0, 0));
 		}
 	}
+	drawBoard(CReact.gameBoard, CReact.canvas, CReact.rows, CReact.columns);
+}
+
+function drawBoard(gameboard, canvas, rows, columns) {
+	var maxWidth = canvas.width / columns;
+	var maxHeight = canvas.height / rows;
+	var width = Math.floor(Math.min(maxWidth, maxHeight));
+	var ctx = canvas.getContext("2d");
+	ctx.strokeStyle = "#000000";
+	ctx.beginPath();
+	for (var i = 0; i < rows + 1; ++i) {
+		ctx.moveTo(0, i * width);
+		ctx.lineTo(rows * width, i * width);
+	}
+	for (var i = 0; i < columns + 1; ++i) {
+		ctx.moveTo(i * width, 0);
+		ctx.lineTo(i * width, rows * width);
+	}
+	ctx.stroke();
 }
 
 /**
