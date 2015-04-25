@@ -12,6 +12,8 @@ var CReact = {
 	gameBoard: undefined,
 	// Number of the player whose turn it is.
 	turn: 1,
+	// Time to wait between animations in milliseconds.
+	animationDelay: 700,
 	// playerColors[i] is the color of the ith player
 	playerColors : ['#000000', '#FF0000', '#00FF00']
 };
@@ -80,9 +82,54 @@ function onCellClick(cellcoord) {
 	cell.numAtoms += 1;
 	cell.player = turn;
 	CReact.turn = turn % CReact.players + 1;
-	window.requestAnimationFrame(function () {
+	var draw = function () {
 		drawBoard(CReact.gameBoard, CReact.canvas, CReact.rows, CReact.columns);
-	});
+	};
+	var explodeAndWait = function (queue) {
+		queue = handleExplosions(queue, CReact.gameBoard);
+		window.requestAnimationFrame(draw);
+		if (queue.length > 0) {
+			setTimeout(function() {
+				explodeAndWait(queue);
+			}, CReact.animationDelay);
+		}
+	};
+	explodeAndWait([cellcoord]);
+}
+
+/**
+ * Explodes each cell in queue simultaneously if ready and returns a list of
+ * cells affected.
+ *
+ * Arguments
+ *   queue - Array of cells to attempt to explode
+ *
+ * Returns a list of cells whose atoms have increased
+ */
+function handleExplosions(queue, board)
+{
+	var newQueue = [];
+	var dr = [-1, 1, 0, 0];
+	var dc = [0, 0, 1, -1];
+	for (var i = 0; i < queue.length; ++i) {
+		var r = queue[i].row;
+		var c = queue[i].col;
+		if (board[r][c].numAtoms < board[r][c].threshold) continue;
+		for (var j = 0; j < 4; ++j) {
+			var nr = r + dr[j];
+			var nc = c + dc[j];
+			if (nr >= 0 && nr < CReact.rows && nc >= 0 && nc < CReact.columns) {
+				board[nr][nc].numAtoms++;
+				board[nr][nc].player = board[r][c].player;
+				board[r][c].numAtoms--;
+				newQueue.push({row: nr, col: nc});
+			}
+		}
+		if (board[r][c].numAtoms == 0) {
+			board[r][c].player = 0;
+		}
+	}
+	return newQueue;
 }
 
 /**
