@@ -3,9 +3,9 @@ var CReact = {
 	// The canvas that the game runs in.
 	canvas: undefined,
 	// Number of columns of the board.
-    columns: 3,
+    columns: 8,
 	// Number of rows of the board.
-	rows: 5,
+	rows: 8,
 	// Number of players in the game.
 	players: 2,
 	// Represents the gameboard.
@@ -14,8 +14,10 @@ var CReact = {
 	turn: 1,
 	// Time to wait between animations in milliseconds.
 	animationDelay: 700,
-	// playerColors[i] is the color of the ith player
-	playerColors : ['#000000', '#FF0000', '#00FF00']
+	// playerColors[i] is the color of the ith player.
+	playerColors : ['#000000', '#FF0000', '#00FF00'],
+	// True if an atom can be placed on the board. Used for locking.
+	canPlay: true,
 };
 
 /**
@@ -50,9 +52,12 @@ function loadGame(canvasId) {
 		}
 	}
 	drawBoard(CReact.gameBoard, CReact.canvas, CReact.rows, CReact.columns);
+	CReact.canPlay = true;
 
 	// Find out which cell was clicked and notify board
 	CReact.canvas.addEventListener('click', function (e) {
+		if (!CReact.canPlay) return;
+		CReact.canPlay = false;
 		var width = computeCellWidth(CReact.canvas,
 				CReact.rows,
 				CReact.columns);
@@ -63,6 +68,8 @@ function loadGame(canvasId) {
 		var cell = getCell(mouseCoord, width);
 		if (cell.row < CReact.rows && cell.col < CReact.columns) {
 			onCellClick(cell);
+		} else {
+			CReact.canPlay = true;
 		}
 	});
 }
@@ -78,23 +85,29 @@ function onCellClick(cellcoord) {
 	var cell = board[cellcoord.row][cellcoord.col];
 	var turn = CReact.turn;
 	// If cell is already claimed, no-op;
-	if (cell.player != 0 && cell.player != turn) return;
-	cell.numAtoms += 1;
-	cell.player = turn;
-	CReact.turn = turn % CReact.players + 1;
-	var draw = function () {
-		drawBoard(CReact.gameBoard, CReact.canvas, CReact.rows, CReact.columns);
-	};
-	var explodeAndWait = function (queue) {
-		queue = handleExplosions(queue, CReact.gameBoard);
-		window.requestAnimationFrame(draw);
-		if (queue.length > 0) {
-			setTimeout(function() {
-				explodeAndWait(queue);
-			}, CReact.animationDelay);
-		}
-	};
-	explodeAndWait([cellcoord]);
+	if (cell.player == 0 || cell.player == turn) {
+		cell.numAtoms += 1;
+		cell.player = turn;
+		CReact.turn = turn % CReact.players + 1;
+		var draw = function () {
+			drawBoard(CReact.gameBoard, CReact.canvas,
+					CReact.rows, CReact.columns);
+		};
+		var explodeAndWait = function (queue) {
+			queue = handleExplosions(queue, CReact.gameBoard);
+			window.requestAnimationFrame(draw);
+			if (queue.length > 0) {
+				setTimeout(function() {
+					explodeAndWait(queue);
+				}, CReact.animationDelay);
+			} else {
+				CReact.canPlay = true;
+			}
+		};
+		explodeAndWait([cellcoord]);
+	} else {
+		CReact.canPlay = true;
+	}
 }
 
 /**
