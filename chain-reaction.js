@@ -12,7 +12,6 @@ var CReact = {
 	gameBoard: undefined,
 };
 
-
 /**
  * Loads the game into a canvas.
  *
@@ -21,4 +20,25 @@ var CReact = {
  */
 function loadGame(canvasId) {
 	CReact.canvas = document.getElementById(canvasId);
+	gameBoard = [];
+	for (var i = 0; i < CReact.rows; ++i) {
+		gameBoard.push([]);
+		for (var j = 0; j < CReact.columns; ++j) {
+			gameBoard[i].push(makeCell(0, 0));
+		}
+	}
+}
+
+/**
+ * Creates a cell
+ *
+ * Arguments:
+ *   numAtoms - number of atoms in the cell
+ *   player - the player who owns the atoms (zero if unowned)
+ */
+function makeCell(numAtoms, player) {
+	return {
+		numAtoms : numAtoms,
+		player : player,
+	};
 }
