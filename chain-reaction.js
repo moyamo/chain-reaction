@@ -15,7 +15,7 @@ var CReact = {
 	// Time to wait between animations in milliseconds.
 	animationDelay: 700,
 	// playerColors[i] is the color of the ith player.
-	playerColors : ['#000000', '#FF0000', '#00FF00', '#0000FF'],
+	playerColors : [[0,0,0], [255, 0, 0], [0, 255, 0], [0, 0, 255]],
 	// True if an atom can be placed on the board. Used for locking.
 	canPlay: true,
 	// True if player has made their first move
@@ -252,7 +252,7 @@ function drawWinner(winner) {
 	var text = "Player " + winner.toString() + " wins!";
 	ctx.font = fontSize.toString() + "px sans";
 	ctx.clearRect(0, 0, width, height);
-	ctx.fillStyle = CReact.playerColors[winner];
+	ctx.fillStyle = toSolidColor(CReact.playerColors[winner]);
 	ctx.fillText(text, 0, height / 2);
 }
 
@@ -269,7 +269,7 @@ function drawBoard(gameBoard, canvas, rows, columns) {
 	var width = computeCellWidth(canvas, rows, columns);
 	var ctx = canvas.getContext("2d");
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.strokeStyle = CReact.playerColors[CReact.turn];
+	ctx.strokeStyle = toSolidColor(CReact.playerColors[CReact.turn]);
 	ctx.beginPath();
 	for (var i = 0; i < rows + 1; ++i) {
 		ctx.moveTo(0, i * width);
@@ -279,16 +279,51 @@ function drawBoard(gameBoard, canvas, rows, columns) {
 		ctx.moveTo(i * width, 0);
 		ctx.lineTo(i * width, rows * width);
 	}
-	var fontSize = 48;
-	ctx.font = fontSize.toString() + "px sans";
+
+	ctx.stroke();
 	for (var i = 0; i < rows; ++i) {
 		for (var j = 0; j < columns; ++j) {
-			var text = gameBoard[i][j].numAtoms.toString();
-			ctx.fillStyle = CReact.playerColors[gameBoard[i][j].player];
-			ctx.fillText(text, j * width + fontSize / 2, i * width + fontSize);
+			drawCell(canvas, gameBoard[i][j], j * width, i * width, width);
 		}
 	}
-	ctx.stroke();
+}
+
+/**
+ * Draw the contents of a cell.
+ *
+ * Arguments
+ *   canvas - the canvas to draw on
+ *   cell - the cell to draw
+ *   x - the x coordinate of the top left of the cell
+ *   y - the y coordinate of the top left of the cell
+ *   width - the width (and height) of the cell (it is a square)
+ */
+function drawCell(canvas, cell, x, y, width)
+{
+	var ctx = canvas.getContext('2d');
+	ctx.save();
+	var drawCircle = function(x, y, width, colors) {
+		var x1 = Math.floor(x),
+			y1 = Math.floor(y),
+			r1 = Math.floor(width / 4),
+			x2 = Math.floor(x + 4*width / 20),
+			y2 = Math.floor(y + 4*width / 20),
+			r2 = Math.floor(width);
+		var radgrad = ctx.createRadialGradient(x1, y1, r1, x2, y2, r2);
+		radgrad.addColorStop(0, colors[0]);
+		radgrad.addColorStop(0.9, colors[1]);
+		radgrad.addColorStop(1, colors[2]);
+		ctx.fillStyle = radgrad;
+		ctx.fillRect(0, 0 , canvas.width, canvas.height);
+	}
+	// Support 8 atoms just in case
+	var offx = [0.5, 0.6, 0.4, 0.3, 0.3, 0.7, 0.4, 0.6];
+	var offy = [0.5, 0.4, 0.4, 0.5, 0.7, 0.3, 0.5, 0.2];
+	for (var i = 0; i < cell.numAtoms; ++i) {
+		drawCircle(x + width *offx[i], y + width *offy[i], width / 5,
+				toGradient(CReact.playerColors[cell.player]));
+	}
+	ctx.restore();
 }
 
 /**
@@ -305,4 +340,41 @@ function makeCell(numAtoms, player, threshold) {
 		player : player,
 		threshold: threshold
 	};
+}
+
+/**
+ * Takes a triple of rgb values and returns a string prepresenting the color
+ *
+ * Arguments:
+ *   color - an array of 3 rgb values
+ *   alpha - optional alpha channel
+ */
+function toSolidColor(color, alpha) {
+	var r = color[0].toString();
+	var b = color[1].toString();
+	var g = color[2].toString();
+	var result;
+	if (alpha === undefined) {
+		alpha = 255;
+	}
+		result = "rgba(" + r + "," + b + "," + g + ", " + alpha.toString() + ')';
+	return result;
+}
+
+/**
+ * Takes a triple of rgb values and returns three colors representing a gradient.
+ *
+ * Arguments:
+ *   color - an array of 3 rgb values
+ */
+function toGradient(color) {
+	var result = [];
+	result.push(toSolidColor(color));
+	var newcolor = [];
+	for (var i = 0; i < color.length; ++i) {
+		newcolor.push(Math.floor(0.5 * color[i]));
+	}
+	result.push(toSolidColor(newcolor));
+	result.push(toSolidColor(newcolor, 0));
+	return result;
 }
