@@ -7,7 +7,7 @@ var CReact = {
 	// Number of rows of the board.
 	rows: 5,
 	// Number of players in the game.
-	players: 3,
+	players: 2,
 	// Represents the gameboard.
 	gameBoard: undefined,
 	// Number of the player whose turn it is.
@@ -317,8 +317,8 @@ function drawCell(canvas, cell, x, y, width)
 		ctx.fillRect(0, 0 , canvas.width, canvas.height);
 	}
 	// Support 8 atoms just in case
-	var offx = [0.5, 0.6, 0.4, 0.3, 0.3, 0.7, 0.4, 0.6];
-	var offy = [0.5, 0.4, 0.4, 0.5, 0.7, 0.3, 0.5, 0.2];
+	var offx = [0.5, 0.6, 0.4, 0.5, 0.5, 0.7, 0.4, 0.6];
+	var offy = [0.5, 0.4, 0.4, 0.3, 0.4, 0.3, 0.5, 0.2];
 	for (var i = 0; i < cell.numAtoms; ++i) {
 		drawCircle(x + width *offx[i], y + width *offy[i], width / 5,
 				toGradient(CReact.playerColors[cell.player]));
